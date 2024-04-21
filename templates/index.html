@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Share</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>E-Share</h1>
+
+        <h3>P2P File Sharing</h3>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="file" accept=".txt, .pdf, .jpg, .png, .mp4, .webm, .ogg, .mp3, .wav" required>
+            <button type="button" onclick="uploadFile()">Upload</button>
+        </form>
+
+        <hr>
+
+        <h3>↓ Available Files ↓</h3>
+        <ul id="fileList"></ul>
+
+        <div class="additional-links">
+            <a href="https://github.com/elliotwellick" target="_blank">E-Corp</a>
+        </div>
+    </div>
+
+    <script>
+        function uploadFile() {
+            let formData = new FormData();
+            formData.append('file', document.getElementById('fileInput').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('File upload failed');
+                }
+            })
+            .then(data => {
+                alert(data.message);
+                displayFileList();
+            })
+            .catch(error => {
+                alert('File upload failed: ' + error.message);
+            });
+        }
+
+        function displayFileList() {
+            fetch('/filelist')
+            .then(response => response.json())
+            .then(data => {
+                let fileListElement = document.getElementById('fileList');
+                fileListElement.innerHTML = '';
+
+                data.forEach(filename => {
+                    let li = document.createElement('li');
+                    let a = document.createElement('a');
+                    a.textContent = filename;
+                    a.href = `/stream/${filename}`;
+                    a.setAttribute('target', '_blank'); 
+                    li.appendChild(a);
+                    fileListElement.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Failed to fetch file list:', error));
+        }
+
+         displayFileList();
+    </script>
+</body>
+</html>
